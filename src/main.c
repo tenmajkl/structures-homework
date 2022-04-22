@@ -3,13 +3,16 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define MAX_STRING 16
+#define MAX_ARRAY 256
+
 /**
  * Structure representing operating system
  */
 typedef struct {
-    char name[16];
+    char name[MAX_STRING];
     int released_at;
-    char family[16];
+    char family[MAX_STRING];
     bool is_unix_like;
 } OperatingSystem;
 
@@ -73,7 +76,7 @@ void show(OperatingSystem oses[], int count)
     pause();
 }
 
-int find(OperatingSystem oses[], int count, char name[16]) 
+int find(OperatingSystem oses[], int count, char name[]) 
 {
     for (int index = 0; index < count; index++) {
         if (strcmp(oses[index].name, name) == 0) {
@@ -83,7 +86,7 @@ int find(OperatingSystem oses[], int count, char name[16])
     return -1;
 }
 
-void edit_menu(char name[16])
+void edit_menu(char name[])
 {
     clear();   
     printf(
@@ -127,7 +130,7 @@ void edit(OperatingSystem oses[], int count)
                 return;
             case 1:
                 printf("Enter name: ");
-                scanf("%16s", oses[index].name);
+                scanf("%16[a-zA-Z0-9]s", oses[index].name);
                 break;
             case 2: 
                 printf("Enter year: ");
@@ -135,7 +138,7 @@ void edit(OperatingSystem oses[], int count)
                 break;
             case 3: 
                 printf("Enter os family: ");
-                scanf("%16s", oses[index].family);
+                scanf("%16[a-zA-Z0-9]s", oses[index].family);
                 break;
             case 4: 
                 printf("Enter whenever its unix like y/n: ");
@@ -149,7 +152,53 @@ void edit(OperatingSystem oses[], int count)
     }
 }
 
-int load(char file[], OperatingSystem result[], int max)
+void add(OperatingSystem oses[], int count)
+{
+    clear();
+    OperatingSystem os;
+
+    printf("Enter name: ");    
+    scanf("%16s", os.name);
+
+    printf("Enter year of release: ");    
+    scanf("%4i", &os.released_at);
+
+    printf("Enter family: ");    
+    scanf("%16s", os.family);
+
+    printf("Its unix-like? y/n: ");    
+    char unix;
+    scanf("%c", &unix);
+    os.is_unix_like = unix == 'y';
+
+    oses[count] = os;
+}
+
+int delete(OperatingSystem oses[], int count)
+{
+    clear();
+    char name[16];
+    printf("Enter name: ");    
+    scanf("%16s", name);
+
+    bool found = false;
+    int result = count;
+
+    for (int index = 0; index < count; index++) {
+        if (found) {
+            oses[index - 1] = oses[index];
+        }
+
+        if (strcmp(oses[index].name, name) == 0) {
+            found = true;
+            result--;
+        }
+    }
+
+    return result;
+}
+
+int load(char file[], OperatingSystem result[], int limit)
 {
     FILE* pointer;
     char ch;
@@ -164,6 +213,7 @@ int load(char file[], OperatingSystem result[], int max)
 
     if (pointer == NULL) {
         puts("File can't be opened");
+        fclose(pointer);
         return -1;
     }
 
@@ -171,7 +221,7 @@ int load(char file[], OperatingSystem result[], int max)
         ch = fgetc(pointer);
         switch (ch) {
             case '\n':
-                if (oses == max) {
+                if (oses == limit) {
                     fclose(pointer);
                     return oses;
                 }
@@ -194,6 +244,11 @@ int load(char file[], OperatingSystem result[], int max)
                         break;
                     case 2:
                         strcpy(os.family, last);
+                        break;
+                    default:
+                        puts("Invalid csv file");
+                        fclose(pointer);
+                        return -1;
     
                 }
                 strcpy(last, "");
@@ -212,7 +267,7 @@ int load(char file[], OperatingSystem result[], int max)
     return oses;
 }
 
-void write(char file[16], OperatingSystem oses[], int size)
+void write(char file[], OperatingSystem oses[], int count)
 {
     FILE *pointer = fopen(file, "w");
 
@@ -221,8 +276,8 @@ void write(char file[16], OperatingSystem oses[], int size)
         return;
     }
 
-    for (int index = 0; index < size; index++) {
-        fprintf(pointer, "%s,%i,%s,%i\n", oses[index].name, oses[index].released_at, oses[index].family, oses[index].is_unix_like ? 'y' : 'n');
+    for (int index = 0; index < count; index++) {
+        fprintf(pointer, "%s,%i,%s,%c\n", oses[index].name, oses[index].released_at, oses[index].family, oses[index].is_unix_like ? 'y' : 'n');
     }
 
     fclose(pointer);
@@ -231,8 +286,11 @@ void write(char file[16], OperatingSystem oses[], int size)
 int main(void)
 {
     int choice;
-    OperatingSystem oses[256];
-    int count = load("data.csv", oses, 256);
+    OperatingSystem oses[MAX_ARRAY];
+    int count = load("data.csv", oses, MAX_ARRAY);
+    if (count == -1) {
+        return -1;
+    }
     while (1) {
         menu();
         scanf("%1i", &choice);
@@ -245,6 +303,13 @@ int main(void)
                 break;
             case 2:
                 edit(oses, count);
+                break;
+            case 3:
+                add(oses, count);
+                count++;
+                break;
+            case 4:
+                count = delete(oses, count);
                 break;
             default:
                 clear();
