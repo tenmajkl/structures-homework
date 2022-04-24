@@ -20,7 +20,7 @@ typedef struct {
  * Clears screen
  */
 void clear(void)
-{return;
+{
     #if defined __WIN32 || defined __WIN64
         system("cls"); // Windows has different command for clearing
     #else 
@@ -37,6 +37,11 @@ void pause(void)
     #endif
 }
 
+void buffer_clear()
+{
+    while ((getchar()) != '\n'); // Basically cleans buffer and we can use scanf for char without getting \n
+}
+
 /**
  * Prints menu
  */
@@ -46,12 +51,13 @@ void menu(void)
     printf(
         "Operating systems\n\n"
         "Operations\n"
-        "0........exit\n"
-        "1........show\n"
-        "2........edit\n"
-        "3.........add\n"
-        "4......delete\n"
-        "5......filter\n"
+        "x.........................exit\n"
+        "s.........................show\n"
+        "e.........................edit\n"
+        "a..........................add\n"
+        "d.......................delete\n"
+        "u...............show unix-like\n"
+        "l.....show linux distributions\n"
         "Chose operation: "
     );
 }
@@ -123,14 +129,16 @@ void edit(OperatingSystem oses[], int count)
 
     while (1) {
         edit_menu(name);
-        scanf("%1i", &choice);
+        scanf("%i", &choice);
 
+        buffer_clear();
+        
         switch (choice) {
             case 0:
                 return;
             case 1:
                 printf("Enter name: ");
-                scanf("%16[a-zA-Z0-9]s", oses[index].name);
+                scanf("%16s", oses[index].name);
                 break;
             case 2: 
                 printf("Enter year: ");
@@ -138,11 +146,11 @@ void edit(OperatingSystem oses[], int count)
                 break;
             case 3: 
                 printf("Enter os family: ");
-                scanf("%16[a-zA-Z0-9]s", oses[index].family);
+                scanf("%16s", oses[index].family);
                 break;
             case 4: 
                 printf("Enter whenever its unix like y/n: ");
-                scanf("%1c", &unix);
+                scanf("%c", &unix);
                 oses[index].is_unix_like = unix == 'y';
                 break;
             default:
@@ -161,10 +169,12 @@ void add(OperatingSystem oses[], int count)
     scanf("%16s", os.name);
 
     printf("Enter year of release: ");    
-    scanf("%4i", &os.released_at);
+    scanf("%i", &os.released_at);
 
     printf("Enter family: ");    
     scanf("%16s", os.family);
+
+    buffer_clear();
 
     printf("Its unix-like? y/n: ");    
     char unix;
@@ -196,6 +206,36 @@ int delete(OperatingSystem oses[], int count)
     }
 
     return result;
+}
+
+void show_unix_like(OperatingSystem oses[], int count)
+{
+    OperatingSystem unix_like[MAX_ARRAY];
+    int unix_like_count = 0;
+
+    for (int index = 0; index < count; index++) {
+        if (oses[index].is_unix_like) {
+            unix_like[unix_like_count] = oses[index];
+            unix_like_count++;
+        }
+    }
+
+    show(unix_like, unix_like_count);
+}
+
+void show_linux_distros(OperatingSystem oses[], int count)
+{
+    OperatingSystem unix_like[MAX_ARRAY];
+    int unix_like_count = 0;
+
+    for (int index = 0; index < count; index++) {
+        if (strcmp(oses[index].family, "linux") == 0) {
+            unix_like[unix_like_count] = oses[index];
+            unix_like_count++;
+        }
+    }
+
+    show(unix_like, unix_like_count);
 }
 
 int load(char file[], OperatingSystem result[], int limit)
@@ -285,7 +325,7 @@ void write(char file[], OperatingSystem oses[], int count)
 
 int main(void)
 {
-    int choice;
+    char choice;
     OperatingSystem oses[MAX_ARRAY];
     int count = load("data.csv", oses, MAX_ARRAY);
     if (count == -1) {
@@ -293,23 +333,29 @@ int main(void)
     }
     while (1) {
         menu();
-        scanf("%1i", &choice);
+        scanf("%c", &choice);
         switch (choice) {
-            case 0:
+            case 'x':
                 write("data.csv", oses, count);
                 return 0;
-            case 1:
+            case 's':
                 show(oses, count);
                 break;
-            case 2:
+            case 'e':
                 edit(oses, count);
                 break;
-            case 3:
+            case 'a':
                 add(oses, count);
                 count++;
                 break;
-            case 4:
+            case 'd':
                 count = delete(oses, count);
+                break;
+            case 'u':
+                show_unix_like(oses, count);
+                break;
+            case 'l':
+                show_linux_distros(oses, count);
                 break;
             default:
                 clear();
