@@ -252,7 +252,7 @@ int load(char file[], OperatingSystem result[], int limit)
     pointer = fopen(file, "r");
 
     if (pointer == NULL) {
-        puts("File can't be opened");
+        puts("File can't be opened. Its propably missing so create file `data.csv`.");
         fclose(pointer);
         return -1;
     }
@@ -312,7 +312,7 @@ void write(char file[], OperatingSystem oses[], int count)
     FILE *pointer = fopen(file, "w");
 
     if (pointer == NULL) {
-        puts("File couldnt be opened");
+        puts("File can't be opened. Its propably missing so create file `data.csv`.");        
         return;
     }
 
