@@ -22,28 +22,32 @@ typedef struct {
 void clear(void)
 {
     #if defined __WIN32 || defined __WIN64
-        system("cls"); // Windows has different command for clearing
+        system("cls"); // Windows has different command for clearing.
     #else 
         system("clear"); // If the os is not windows its propably unix-like.
     #endif
 }
 
-void pause(void)
-{
-    #if defined __WIN32 || defined __WIN64
-        system("pause"); 
-    #else 
-        system("read a");
-    #endif
-}
-
-void buffer_clear()
+/**
+ * Clears input buffer
+ */
+void buffer_clear(void)
 {
     while ((getchar()) != '\n'); // Basically cleans buffer and we can use scanf for char without getting \n
 }
 
 /**
- * Prints menu
+ * Waits for enter
+ */
+void pause(void)
+{
+    buffer_clear();
+    getchar();
+    return;
+}
+
+/**
+ * Displays menu
  */
 void menu(void)
 {
@@ -62,6 +66,9 @@ void menu(void)
     );
 }
 
+/**
+ * Displays all data in table
+ */
 void show(OperatingSystem oses[], int count)
 {
     clear();
@@ -82,6 +89,9 @@ void show(OperatingSystem oses[], int count)
     pause();
 }
 
+/**
+ * Returns index of item with given name. -1 if not found
+ */
 int find(OperatingSystem oses[], int count, char name[]) 
 {
     for (int index = 0; index < count; index++) {
@@ -92,6 +102,9 @@ int find(OperatingSystem oses[], int count, char name[])
     return -1;
 }
 
+/**
+ * Displays menu for editing
+ */
 void edit_menu(char name[])
 {
     clear();   
@@ -108,13 +121,16 @@ void edit_menu(char name[])
     );
 }
 
+/**
+ * Provides editing process
+ */
 void edit(OperatingSystem oses[], int count)
 {
-    char name[16];
+    char name[MAX_STRING];
     int index;
     clear();
     printf("Enter name of operating system: ");
-    scanf("%16s", name);
+    scanf("%15s", name);
 
     index = find(oses, count, name);
 
@@ -125,7 +141,6 @@ void edit(OperatingSystem oses[], int count)
     }
 
     int choice;
-    char unix;
 
     while (1) {
         edit_menu(name);
@@ -138,20 +153,19 @@ void edit(OperatingSystem oses[], int count)
                 return;
             case 1:
                 printf("Enter name: ");
-                scanf("%16s", oses[index].name);
+                scanf("%15s", oses[index].name);
                 break;
             case 2: 
                 printf("Enter year: ");
-                scanf("%4i", &oses[index].released_at);
+                scanf("%i", &oses[index].released_at);
                 break;
             case 3: 
                 printf("Enter os family: ");
-                scanf("%16s", oses[index].family);
+                scanf("%15s", oses[index].family);
                 break;
             case 4: 
                 printf("Enter whenever its unix like y/n: ");
-                scanf("%c", &unix);
-                oses[index].is_unix_like = unix == 'y';
+                oses[index].is_unix_like = getchar() == 'y';
                 break;
             default:
                 puts("Not implemented.");
@@ -160,19 +174,22 @@ void edit(OperatingSystem oses[], int count)
     }
 }
 
+/**
+ * Adds operating system
+ */
 void add(OperatingSystem oses[], int count)
 {
     clear();
     OperatingSystem os;
 
     printf("Enter name: ");    
-    scanf("%16s", os.name);
+    scanf("%15s", os.name);
 
     printf("Enter year of release: ");    
     scanf("%i", &os.released_at);
 
     printf("Enter family: ");    
-    scanf("%16s", os.family);
+    scanf("%15s", os.family);
 
     buffer_clear();
 
@@ -184,12 +201,15 @@ void add(OperatingSystem oses[], int count)
     oses[count] = os;
 }
 
+/**
+ * Deltes operating system
+ */
 int delete(OperatingSystem oses[], int count)
 {
     clear();
-    char name[16];
+    char name[MAX_STRING];
     printf("Enter name: ");    
-    scanf("%16s", name);
+    scanf("%15s", name);
 
     bool found = false;
     int result = count;
@@ -208,6 +228,9 @@ int delete(OperatingSystem oses[], int count)
     return result;
 }
 
+/**
+ * Displays only unix like operating systems
+ */
 void show_unix_like(OperatingSystem oses[], int count)
 {
     OperatingSystem unix_like[MAX_ARRAY];
@@ -223,6 +246,9 @@ void show_unix_like(OperatingSystem oses[], int count)
     show(unix_like, unix_like_count);
 }
 
+/**
+ * Displays only linux distributions
+ */
 void show_linux_distros(OperatingSystem oses[], int count)
 {
     OperatingSystem unix_like[MAX_ARRAY];
@@ -238,6 +264,9 @@ void show_linux_distros(OperatingSystem oses[], int count)
     show(unix_like, unix_like_count);
 }
 
+/**
+ * Loads data from csv file
+ */
 int load(char file[], OperatingSystem result[], int limit)
 {
     FILE* pointer;
@@ -246,14 +275,13 @@ int load(char file[], OperatingSystem result[], int limit)
     OperatingSystem os;
     int oses = 0;
     int item = 0;
-    char last[16];
+    char last[MAX_STRING];
     int last_index = 0;
      
     pointer = fopen(file, "r");
 
     if (pointer == NULL) {
         puts("File can't be opened. Its propably missing so create file `data.csv`.");
-        fclose(pointer);
         return -1;
     }
 
@@ -307,6 +335,9 @@ int load(char file[], OperatingSystem result[], int limit)
     return oses;
 }
 
+/**
+ * Writes data back to csv file
+ */
 void write(char file[], OperatingSystem oses[], int count)
 {
     FILE *pointer = fopen(file, "w");
