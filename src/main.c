@@ -59,7 +59,7 @@ void menu(void)
         "e.........................edit\n"
         "a..........................add\n"
         "d.......................delete\n"
-        "y...............show youngest\n"
+        "y................show youngest\n"
         "l.....show linux distributions\n"
         "Chose operation: "
     );
@@ -126,12 +126,11 @@ void edit_menu(char name[])
 void edit(OperatingSystem oses[], int count)
 {
     char name[MAX_STRING];
-    int index;
     clear();
     printf("Enter name of operating system: ");
     scanf("%15s", name);
 
-    index = find(oses, count, name);
+    int index = find(oses, count, name);
 
     if (index == -1) {
         printf("Operating system %s does not exis!\n", name);
@@ -165,6 +164,7 @@ void edit(OperatingSystem oses[], int count)
             case 4: 
                 printf("Enter whenever its unix like y/n: ");
                 oses[index].is_unix_like = getchar() == 'y';
+                buffer_clear();
                 break;
         }
     }
@@ -173,13 +173,19 @@ void edit(OperatingSystem oses[], int count)
 /**
  * Adds operating system
  */
-void add(OperatingSystem oses[], int count)
+bool add(OperatingSystem oses[], int count)
 {
     clear();
     OperatingSystem os;
 
     printf("Enter name: ");    
     scanf("%15s", os.name);
+
+    if (find(oses, count, os.name) > -1) {
+        printf("Operating Sytem %s already exists!\n", os.name);
+        pause();
+        return false;
+    }
 
     printf("Enter year of release: ");    
     scanf("%i", &os.released_at);
@@ -190,11 +196,12 @@ void add(OperatingSystem oses[], int count)
     buffer_clear();
 
     printf("Its unix-like? y/n: ");    
-    char is_unix_like;
-    scanf("%c", &is_unix_like);
-    os.is_unix_like = is_unix_like == 'y';
+    os.is_unix_like = getchar() == 'y';
+
+    buffer_clear(); 
 
     oses[count] = os;
+    return true;
 }
 
 /**
@@ -400,10 +407,11 @@ int main(void)
     }
     while (1) {
         menu();
-        scanf("%c", &choice);
+        choice = getchar();
+
         switch (choice) {
             case 'x':
-                write("data.csv", oses, count);
+                write("data.txt", oses, count);
                 return 0;
             case 's':
                 show(oses, count);
@@ -412,8 +420,7 @@ int main(void)
                 edit(oses, count);
                 break;
             case 'a':
-                add(oses, count);
-                count++;
+                count += add(oses, count) ? 1 : 0; // Just in case
                 break;
             case 'd':
                 count = delete(oses, count);
@@ -428,6 +435,6 @@ int main(void)
                 buffer_clear();
         }
     }
-    write("data.csv", oses, count);
+    write("data.txt", oses, count);
     return 0;
 }
