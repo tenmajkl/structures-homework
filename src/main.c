@@ -59,7 +59,7 @@ void menu(void)
         "e.........................edit\n"
         "a..........................add\n"
         "d.......................delete\n"
-        "u...............show unix-like\n"
+        "y...............show youngest\n"
         "l.....show linux distributions\n"
         "Chose operation: "
     );
@@ -225,21 +225,30 @@ int delete(OperatingSystem oses[], int count)
 }
 
 /**
- * Displays only unix like operating systems
+ * Displays youngest operating systems
  */
-void show_unix_like(OperatingSystem oses[], int count)
+void show_youngest(OperatingSystem oses[], int count)
 {
-    OperatingSystem unix_like[MAX_ARRAY];
-    int unix_like_count = 0;
+    OperatingSystem filtered[count];
+    int filtered_count = 0;
+    int max = count > 0 ? oses[1].released_at : 0;
+    int released_at; 
+    for (int index = 1; index < count; index++) {
+        
+        released_at = oses[index].released_at;
+        
+        if (released_at > max) {
+            max = released_at;
+            filtered_count = 0;
+        }
 
-    for (int index = 0; index < count; index++) {
-        if (oses[index].is_unix_like) {
-            unix_like[unix_like_count] = oses[index];
-            unix_like_count++;
+        if (released_at == max) {
+            filtered[filtered_count] = oses[index];
+            filtered_count++;
         }
     }
 
-    show(unix_like, unix_like_count);
+    show(filtered, filtered_count);
 }
 
 /**
@@ -251,7 +260,7 @@ void show_linux_distros(OperatingSystem oses[], int count)
     int unix_like_count = 0;
 
     for (int index = 0; index < count; index++) {
-        if (strcmp(oses[index].family, "linux") == 0) {
+        if (strcmp(oses[index].family, "Linux") == 0) {
             unix_like[unix_like_count] = oses[index];
             unix_like_count++;
         }
@@ -342,15 +351,16 @@ int load(char file[], OperatingSystem result[])
     pointer = fopen(file, "r");
 
     if (pointer == NULL) {
-        puts("File can't be opened. Its propably missing so create file `data.csv`.");
         return -1;
     }
 
     OperatingSystem curent;
-    while (fscanf(pointer, "%15s%i%15s%i", curent.name, &curent.released_at, curent.family, &curent.is_unix_like) == 4) {
+    int is_unix_like;
+    while (fscanf(pointer, "%15s%i%15s%i", curent.name, &curent.released_at, curent.family, &is_unix_like) == 4) {
         if (count == MAX_ARRAY) {
             return count;
         }
+        curent.is_unix_like = is_unix_like != 0;
         result[count] = curent;
         count++;
     }
@@ -383,8 +393,9 @@ int main(void)
 {
     char choice;
     OperatingSystem oses[MAX_ARRAY];
-    int count = load("data.csv", oses);
+    int count = load("data.txt", oses);
     if (count == -1) {
+        puts("File can't be opened. Its propably missing so create file `data.csv`.");
         return -1;
     }
     while (1) {
@@ -407,8 +418,8 @@ int main(void)
             case 'd':
                 count = delete(oses, count);
                 break;
-            case 'u':
-                show_unix_like(oses, count);
+            case 'y':
+                show_youngest(oses, count);
                 break;
             case 'l':
                 show_linux_distros(oses, count);
