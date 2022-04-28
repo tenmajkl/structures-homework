@@ -1,0 +1,4 @@
+Arch 2002 Linux 1
+macOS 2002 Darwin 1
+gentoo 2000 Linux 1
+windows 1985 windows 0

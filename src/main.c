@@ -43,7 +43,6 @@ void pause(void)
 {
     buffer_clear();
     getchar();
-    return;
 }
 
 /**
@@ -167,9 +166,6 @@ void edit(OperatingSystem oses[], int count)
                 printf("Enter whenever its unix like y/n: ");
                 oses[index].is_unix_like = getchar() == 'y';
                 break;
-            default:
-                puts("Not implemented.");
-                break;
         }
     }
 }
@@ -194,9 +190,9 @@ void add(OperatingSystem oses[], int count)
     buffer_clear();
 
     printf("Its unix-like? y/n: ");    
-    char unix;
-    scanf("%c", &unix);
-    os.is_unix_like = unix == 'y';
+    char is_unix_like;
+    scanf("%c", &is_unix_like);
+    os.is_unix_like = is_unix_like == 'y';
 
     oses[count] = os;
 }
@@ -265,8 +261,8 @@ void show_linux_distros(OperatingSystem oses[], int count)
 }
 
 /**
- * Loads data from csv file
- */
+ * Loads data from csv file - legacy
+ *
 int load(char file[], OperatingSystem result[], int limit)
 {
     FILE* pointer;
@@ -334,9 +330,38 @@ int load(char file[], OperatingSystem result[], int limit)
     fclose(pointer);
     return oses;
 }
+*/
 
 /**
- * Writes data back to csv file
+ * Loads oses from file
+ */
+int load(char file[], OperatingSystem result[])
+{
+    FILE* pointer;
+    int count = 0;
+    pointer = fopen(file, "r");
+
+    if (pointer == NULL) {
+        puts("File can't be opened. Its propably missing so create file `data.csv`.");
+        return -1;
+    }
+
+    OperatingSystem curent;
+    while (fscanf(pointer, "%15s%i%15s%i", curent.name, &curent.released_at, curent.family, &curent.is_unix_like) == 4) {
+        if (count == MAX_ARRAY) {
+            return count;
+        }
+        result[count] = curent;
+        count++;
+    }
+
+    fclose(pointer);
+
+    return count;
+}
+
+/**
+ * Writes data back to file
  */
 void write(char file[], OperatingSystem oses[], int count)
 {
@@ -348,7 +373,7 @@ void write(char file[], OperatingSystem oses[], int count)
     }
 
     for (int index = 0; index < count; index++) {
-        fprintf(pointer, "%s,%i,%s,%c\n", oses[index].name, oses[index].released_at, oses[index].family, oses[index].is_unix_like ? 'y' : 'n');
+        fprintf(pointer, "%s %i %s %i\n", oses[index].name, oses[index].released_at, oses[index].family, oses[index].is_unix_like ? 1 : 0);
     }
 
     fclose(pointer);
@@ -358,7 +383,7 @@ int main(void)
 {
     char choice;
     OperatingSystem oses[MAX_ARRAY];
-    int count = load("data.csv", oses, MAX_ARRAY);
+    int count = load("data.csv", oses);
     if (count == -1) {
         return -1;
     }
@@ -389,8 +414,7 @@ int main(void)
                 show_linux_distros(oses, count);
                 break;
             default:
-                clear();
-                puts("not implemented");
+                buffer_clear();
         }
     }
     write("data.csv", oses, count);
